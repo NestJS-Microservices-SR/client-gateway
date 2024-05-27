@@ -3,33 +3,63 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { catchError } from 'rxjs';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PRODUCT_SERVICE } from 'src/config';
+import { CreateProductDto } from './dto/create-product.dto';
 
 @Controller('products')
 export class ProductsController {
-  constructor() {}
+  constructor(
+    @Inject(PRODUCT_SERVICE) private readonly productsClient: ClientProxy,
+  ) {}
 
   @Post()
-  createProduct() {
-    return 'Crea un producto';
+  createProduct(@Body() createProductoDto: CreateProductDto) {
+    return this.productsClient.send(
+      { cmd: 'create_product' },
+      createProductoDto,
+    );
   }
 
   @Get()
-  findAllProducts() {
-    return 'Esta funcion regresa varios productos';
+  findAllProducts(@Query() paginationDto: PaginationDto) {
+    return this.productsClient.send(
+      { cmd: 'find_all_products' },
+      paginationDto,
+    );
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number) {
-    return `Esta funcion regresa el producto ${id}`;
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productsClient.send({ cmd: 'find_one_products' }, { id }).pipe(
+      catchError((err) => {
+        throw new RpcException(err);
+      }),
+    );
+
+    // try {
+    //   const product = await firstValueFrom(
+    //     this.productsClient.send({ cmd: 'find_one_products' }, { id }),
+    //   ); // convierte el observable en una procesa y recibe el primer valor
+
+    //   return product;
+    // } catch (error) {
+    //   throw new RpcException(error);
+    // }
   }
 
   @Delete(':id')
-  deleteProduct(@Param('id') id: number) {
-    return `Esta función elimina el producto ${id}`;
+  deleteProduct(@Param('id', ParseIntPipe) id: number) {
+    return this.productsClient.send({ cmd: 'delete_product' }, { id });
   }
 
   @Patch(':id')
