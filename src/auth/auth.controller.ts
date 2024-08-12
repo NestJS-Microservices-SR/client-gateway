@@ -1,20 +1,12 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Inject,
-  Post,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, UseGuards } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { catchError } from 'rxjs';
-import { NATS_SERVICE } from 'src/config';
+import { NATS_SERVICE } from '../config';
+import { Token } from './decorators/token.decorator';
+import { User } from './decorators/user.decorator';
 import { LoginUserDTO, RegisterUserDTO } from './dto';
 import { AuthGuard } from './guards/auth.guard';
-import { User } from './decorators/user.decorator';
 import { CurrentUser } from './interfaces/current-user.interface';
-import { Token } from './decorators/token.decorator';
 
 @Controller('auth')
 export class AuthController {
